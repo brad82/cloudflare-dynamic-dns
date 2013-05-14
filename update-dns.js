@@ -1,7 +1,7 @@
 #!/usr/bin/node
 var request = require('request');
 var fs = require('fs');
-var config = require('config.js');
+var config = require('./config.js');
 
 
 
@@ -14,7 +14,7 @@ function log_notice(msg, fatal) {
 }
 function log_fatal(msg) {
 	console.log("Fatal Error: "+msg+" (Exit)")
-	exit()
+	process.exit(1)
 }
 function update_stale_records(current_ip) {
 	request.post(
@@ -29,8 +29,11 @@ function update_stale_records(current_ip) {
 		function(error, response, body) {
 			if(!error && response.statusCode == 200) {
 				//console.log(response)
-				response = JSON.parse(response.body).response
-				records = response.recs.objs
+				reply = JSON.parse(response.body)
+				if(reply.result == "error")
+					log_fatal("There was an error getting record list ("+reply.msg+")")
+				
+				records = reply.response.recs.objs
 
 				records.forEach(function(record) {
 					if(record.type != "A")
